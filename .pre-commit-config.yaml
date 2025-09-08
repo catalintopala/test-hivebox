@@ -1,0 +1,90 @@
+ci:
+  skip:
+  - hadolint
+
+repos:
+  - repo: https://github.com/pre-commit/pre-commit-hooks
+    rev: 3e8a8703264a2f4a69428a0aa4dcb512790b2c8c # v6.0.0
+    hooks:
+      - id: check-added-large-files
+        args:
+          - --enforce-all
+      - id: check-case-conflict
+      - id: check-docstring-first
+      - id: check-illegal-windows-names
+      - id: check-merge-conflict
+      - id: check-yaml
+      - id: detect-aws-credentials
+        args:
+          - --allow-missing-credentials
+      - id: detect-private-key
+      - id: double-quote-string-fixer
+      - id: end-of-file-fixer
+      - id: forbid-submodules
+      - id: mixed-line-ending
+        args:
+          - --fix=lf
+      - id: name-tests-test
+      - id: no-commit-to-branch
+      - id: trailing-whitespace
+        args:
+          - --markdown-linebreak-ext=md
+
+  # Python
+  - repo: https://github.com/astral-sh/uv-pre-commit
+    rev: 21c8a448c47ee9e7ed7e17f82ff5fc837a907793 # 0.8.15
+    hooks:
+    - id: uv-lock
+
+  - repo: https://github.com/astral-sh/ruff-pre-commit
+    rev: 60ef368a6f48dfb4317651017f66dbb055241a6c # v0.12.12
+    hooks:
+      - id: ruff-check
+        args:
+          - --fix
+          - --show-fixes
+      - id: ruff-format
+
+  - repo: https://github.com/asottile/reorder-python-imports
+    rev: 48a80feb65ccf330db459a7bcae448e05e6c1a13 # v3.15.0
+    hooks:
+    - id: reorder-python-imports
+
+  - repo: https://github.com/asottile/add-trailing-comma
+    rev: 73c775a66303f25cbf03b0c2e3c14e71253f198a # v3.2.0
+    hooks:
+    -   id: add-trailing-comma
+
+  # Detect hardcoded secrets.
+  - repo: https://github.com/gitleaks/gitleaks
+    rev: 4fb43823ef3d152d239e92d7d5cb04783b548062  # v8.28.0
+    hooks:
+    - id: gitleaks
+
+  # Github Actions static analysis tool.
+  - repo: https://github.com/zizmorcore/zizmor-pre-commit
+    rev: 5fee7cc03a2498e0ce36a18f36dfb558a30a426c  # v1.12.1
+    hooks:
+    - id: zizmor
+
+  # GitHub Actions linter
+  - repo: https://github.com/rhysd/actionlint
+    rev: 03d0035246f3e81f36aed592ffb4bebf33a03106 # v1.7.7
+    hooks:
+    - id: actionlint
+
+  # Dockerfile linter
+  - repo: https://github.com/hadolint/hadolint
+    rev: 33deb7817c88475caa1ce7d832922ff0f674fa15  # v2.13.1
+    hooks:
+    - id: hadolint
+
+  - repo: https://github.com/commitizen-tools/commitizen
+    rev: 186dd18042ad30269e157e17db271a34b71e3bcd # v4.8.4
+    hooks:
+      - id: commitizen
+        stages:
+          - commit-msg
+      - id: commitizen-branch
+        stages:
+          - pre-push
