@@ -71,11 +71,8 @@ jobs:
           if [ $(echo "$changed_dirs" | wc -l) -ne 1 ]; then
             echo "More than one folder was modified."
             exit 1
-          elif [ $(echo "$changed_dirs" | wc -w) -eq 1 ]; then
-            echo "Only one folder was modified."
           else
-            echo "More than one folder was modified."
-            exit 1
+            echo "Only one folder was modified."
           fi
 
       - name: Install hadolint
