@@ -1,6 +1,7 @@
 ci:
   skip:
   - hadolint
+  - no-commit-to-branch
 
 repos:
   - repo: https://github.com/pre-commit/pre-commit-hooks
@@ -18,7 +19,6 @@ repos:
         args:
           - --allow-missing-credentials
       - id: detect-private-key
-      - id: double-quote-string-fixer
       - id: end-of-file-fixer
       - id: forbid-submodules
       - id: mixed-line-ending
@@ -45,15 +45,10 @@ repos:
           - --show-fixes
       - id: ruff-format
 
-  - repo: https://github.com/asottile/reorder-python-imports
-    rev: 48a80feb65ccf330db459a7bcae448e05e6c1a13 # v3.15.0
-    hooks:
-    - id: reorder-python-imports
-
   - repo: https://github.com/asottile/add-trailing-comma
     rev: 73c775a66303f25cbf03b0c2e3c14e71253f198a # v3.2.0
     hooks:
-    -   id: add-trailing-comma
+    - id: add-trailing-comma
 
   # Detect hardcoded secrets.
   - repo: https://github.com/gitleaks/gitleaks
