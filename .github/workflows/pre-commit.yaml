@@ -65,8 +65,18 @@ jobs:
           echo "Changed directories: $CHANGED_DIRS"
           echo "folders=$(echo "$CHANGED_DIRS" | xargs echo)" >> $GITHUB_OUTPUT
 
+      - name: Check if only one folder was modified
+        id: check_single_folder
+        run: |
+          if [ $(echo "$folders" | wc -w) -eq 1 ]; then
+            echo "More than one folder was modified."
+            exit 1
+          else
+            echo "Only one folder was modified"
+          fi
+
       - name: Install hadolint
-        if: contains(steps.changed_folders.outputs.folders, 'app')
+        if: success() && steps.check_single_folder.conclusion == 'success' && contains(steps.changed_folders.outputs.folders, 'app')
         run: >-
           curl -L "$(
           curl -s https://api.github.com/repos/hadolint/hadolint/releases/latest
