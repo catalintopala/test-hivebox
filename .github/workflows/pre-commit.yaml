@@ -68,11 +68,14 @@ jobs:
       - name: Check if only one folder was modified
         id: check_single_folder
         run: |
-          if [ $(echo "$folders" | wc -w) -eq 1 ]; then
+          if [ $(echo "$folders" | wc -l) -ne 1 ]; then
             echo "More than one folder was modified."
             exit 1
+          elif [ $(echo "$folders" | wc -w) -eq 1 ]; then
+            echo "Only one folder was modified."
           else
-            echo "Only one folder was modified"
+            echo "More than one folder was modified."
+            exit 1
           fi
 
       - name: Install hadolint
