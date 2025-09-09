@@ -56,22 +56,22 @@ jobs:
           +refs/heads/*:refs/remotes/origin/*
 
       - name: Get changed directories
-        id: changed_directories
+        id: get_changed_dirs
         env:
           BASE_REF: ${{ github.base_ref }}
           SHA: ${{ github.sha }}
         run: |
           export CHANGED_DIRS=$(git diff --name-only "origin/$BASE_REF" "$SHA" | awk -F/ '{print $1}' | sort -u)
           echo "Changed directories: $CHANGED_DIRS"
-          echo "$CHANGED_DIRS" >> $GITHUB_OUTPUT
+          echo "changed_dirs=$CHANGED_DIRS" >> $GITHUB_OUTPUT
 
       - name: Check if only one folder was modified
         id: check_single_folder
         run: |
-          if [ $(echo "$CHANGED_DIRS" | wc -l) -ne 1 ]; then
+          if [ $(echo "$changed_dirs" | wc -l) -ne 1 ]; then
             echo "More than one folder was modified."
             exit 1
-          elif [ $(echo "$CHANGED_DIRS" | wc -w) -eq 1 ]; then
+          elif [ $(echo "$changed_dirs" | wc -w) -eq 1 ]; then
             echo "Only one folder was modified."
           else
             echo "More than one folder was modified."
@@ -79,7 +79,7 @@ jobs:
           fi
 
       - name: Install hadolint
-        if: success() && steps.check_single_folder.conclusion == 'success' && contains(steps.changed_directories.outputs.CHANGED_DIRS, 'app')
+        if: success() && steps.check_single_folder.conclusion == 'success' && contains(steps.get_changed_dirs.outputs.changed_dirs, 'app')
         run: >-
           curl -L "$(
           curl -s https://api.github.com/repos/hadolint/hadolint/releases/latest
@@ -100,7 +100,7 @@ jobs:
           message: '[pre-commit] Autofix violations'
 
       - name: Trigger workflow for "app"
-        if: steps.check_single_folder.conclusion == 'success' && contains(steps.changed_directories.outputs.CHANGED_DIRS, 'app')
+        if: steps.check_single_folder.conclusion == 'success' && contains(steps.get_changed_dirs.outputs.changed_dirs, 'app')
         run: >-
           curl -L
           -X POST
