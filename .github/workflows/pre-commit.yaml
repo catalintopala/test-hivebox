@@ -100,7 +100,7 @@ jobs:
           message: '[pre-commit] Autofix violations'
 
       - name: Trigger workflow for "app"
-        if: contains(steps.changed_folders.outputs.folders, 'app')
+        if: steps.check_single_folder.conclusion == 'success' && contains(steps.changed_folders.outputs.folders, 'app')
         run: >-
           curl -L
           -X POST
