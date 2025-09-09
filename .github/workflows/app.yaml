@@ -3,6 +3,9 @@ name: App CI
 on:
   workflow_dispatch:
 
+permissions:
+  contents: read
+
 jobs:
   semgrep:
     if: (github.actor != 'dependabot[bot]')
