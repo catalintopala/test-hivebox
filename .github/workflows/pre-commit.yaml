@@ -37,16 +37,12 @@ jobs:
         env:
           cache-name: cache-pre-commit
         with:
-          path: |
-            .pre_commit_venv
-            ~/.cache/pre-commit
+          path: ~/.cache/pre-commit
           key: ${{ env.cache-name }}-${{ hashFiles('.pre-commit-config.yaml', '~/.cache/pre-commit/*') }}
 
       - name: Install pre-commit
         if: steps.cache_pre_commit.outputs.cache-hit != 'true'
         run: |
-          uv venv .pre_commit_venv
-          source .pre_commit_venv/bin/activate
           uv tool install pre-commit
           pre-commit install --install-hooks --hook-type pre-commit --hook-type commit-msg --hook-type pre-push
           pre-commit gc
@@ -86,9 +82,12 @@ jobs:
           && chmod +x hadolint && sudo mv hadolint /usr/bin/
 
       - name: Run pre-commit hooks
-        run: |
-          source .pre_commit_venv/bin/activate
-          SKIP=no-commit-to-branch pre-commit run --color=always --show-diff-on-failure
+        run: >-
+          pre-commit run
+          --from-ref origin/main
+          --to-ref ${{ github.sha }}
+          --color=always
+          --show-diff-on-failure
 
       - name: Push fixes
         if: failure()
