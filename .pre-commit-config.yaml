@@ -41,7 +41,8 @@ repos:
     hooks:
       - id: ruff-check
         args:
-          - --select I
+          - --extend-select
+          - I
           - --fix
           - --show-fixes
       - id: ruff-format
