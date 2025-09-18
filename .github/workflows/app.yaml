@@ -12,14 +12,14 @@ jobs:
     permissions:
       # This permission is required when uploading sarifs to GitHub
       security-events: write
-      contents: read
       actions: read
     defaults:
       run:
-        working-directory: ./app
+        working-directory: app
     runs-on: ubuntu-24.04
     container:
-      image: semgrep/semgrep@sha256:5c1a010a090c700918adee905b1d34311acabd4c73f1c030861f3e227b4e8fc9 # v1.135.0-nonroot
+      image: semgrep/semgrep@sha256:46c44b623972875ebc6273adb3d725f0411f81b52f8e077aabf21629a6190c39 # v1.135.0
+      options: --user root
 
     steps:
       - name: Harden the runner (Audit all outbound calls)
