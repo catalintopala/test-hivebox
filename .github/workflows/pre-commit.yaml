@@ -93,7 +93,7 @@ jobs:
           fetch-depth: 0
           persist-credentials: false
           ref: ${{ github.sha }}
-          ssh-key: ${{ secrets.TEST_HIVEBOX_AUTOFIX_COMMIT_KEY }}
+          token: ${{ secrets.TEST_HIVEBOX_AUTOFIX_COMMIT_KEY }}
 
       - name: Run pre-commit hooks
         env:
