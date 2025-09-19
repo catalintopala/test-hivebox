@@ -84,7 +84,7 @@ jobs:
         if:
           success() &&
           steps.check_single_dir.conclusion == 'success' &&
-          steps.get_changed_dirs.outputs.changed_dirs == 'app'
+          contains(steps.get_changed_dirs.outputs.changed_dirs, 'app')
         run: >-
           curl -L "$(
           curl -s https://api.github.com/repos/hadolint/hadolint/releases/latest
