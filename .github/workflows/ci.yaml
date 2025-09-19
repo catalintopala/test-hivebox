@@ -71,7 +71,7 @@ jobs:
           echo "changed_dirs=\"$CHANGED_DIRS\"" >> "$GITHUB_OUTPUT"
 
       - name: Check if only one directory was modified
-        id: check_single_directory
+        id: check_single_dir
         run: |
           if [ "$(echo "$changed_dirs" | wc -l)" -ne 1 ]; then
             echo "More than one directory was modified."
@@ -81,7 +81,10 @@ jobs:
 
       # Only install if the directory is 'app', as it is the only directory that is expected to have a Dockerfile
       - name: Install hadolint
-        if: success() && steps.check_single_directory.conclusion == 'success' && steps.get_changed_dirs.outputs.changed_dirs == 'app'
+        if:
+          success() &&
+          steps.check_single_dir.conclusion == 'success' &&
+          steps.get_changed_dirs.outputs.changed_dirs == 'app'
         run: >-
           curl -L "$(
           curl -s https://api.github.com/repos/hadolint/hadolint/releases/latest
