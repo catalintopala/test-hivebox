@@ -1,4 +1,4 @@
-name: pre-commit
+name: CI
 
 on:
   pull_request:
@@ -121,3 +121,6 @@ jobs:
     needs: pre-commit
     uses: ./.github/workflows/app.yaml
     if: needs.pre-commit.outputs.changed_dir == 'app'
+    permissions:
+      security-events: write
+      actions: read
