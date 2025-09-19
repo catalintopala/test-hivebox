@@ -122,5 +122,6 @@ jobs:
     uses: ./.github/workflows/app.yaml
     if: needs.pre-commit.outputs.changed_dir == 'app'
     permissions:
+      contents: read
       security-events: write
       actions: read
