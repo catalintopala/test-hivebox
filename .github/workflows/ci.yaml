@@ -37,6 +37,9 @@ jobs:
         with:
           version: "0.8.15"
           enable-cache: true
+          cache-dependency-glob: |
+            **/pyproject.toml
+            **/uv.lock
 
       - name: Cache pre-commit dependencies
         id: cache_pre_commit
