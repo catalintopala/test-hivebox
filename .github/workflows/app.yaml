@@ -34,15 +34,17 @@ jobs:
       - name: Run semgrep
         run: |
           semgrep scan --config auto --sarif > semgrep.sarif
-          pwd
-          echo "${{ github.workspace }}"
-          ls
 
       - name: Upload SARIF file for GitHub Advanced Security Dashboard
-        uses: github/codeql-action/upload-sarif@f1f6e5f6af878fb37288ce1c627459e94dbf7d01 # v3.30.1
-        with:
-          checkout_path: ${{ github.workspace }}/app
-          sarif_file: semgrep.sarif
+        env:
+          REPO: ${{ github.repository }}
+          REF: ${{ github.ref }}
+          SHA: ${{ github.sha }}
+        run: >-
+          codeql github upload-results
+          --repository="$REPO"
+          --ref="$REF" --commit="$SHA"
+          --sarif=semgrep.sarif
         if: always()
 
   pytest:
@@ -72,6 +74,9 @@ jobs:
         with:
           version: "0.8.15"
           enable-cache: true
+          cache-dependency-glob: |
+            **/pyproject.toml
+            **/uv.lock
 
       - name: Install dependencies
         run: |
@@ -80,6 +85,3 @@ jobs:
       - name: Test with pytest
         run: |
           uv run pytest tests
-
-      - name: Minimize uv cache
-        run: uv cache prune --ci
