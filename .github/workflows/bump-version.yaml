@@ -4,6 +4,8 @@ on:
   push:
     branches:
       - main
+    paths:
+      - "app/**"
 
 permissions:
   contents: read
@@ -21,29 +23,37 @@ jobs:
         with:
           egress-policy: audit
 
-      - name: Check out
+      - name: Check out repository
         uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # v5.0.0
         with:
           persist-credentials: false
           fetch-depth: 0
           token: "${{ secrets.TEST_HIVEBOX_COMMITIZEN_TOKEN }}"
 
-      - name: Fetch remote branches
-        run: >-
-          git fetch --no-tags --prune --depth=1 origin
-          +refs/heads/*:refs/remotes/origin/*
-
       - name: Get changed directories
         id: get_changed_dirs
         env:
           SHA: ${{ github.sha }}
         run: |
-          CHANGED_DIRS=$(git diff --name-only origin/main "$SHA" | awk -F/ '{print $1}' | sort -u)
+          CHANGED_DIRS=$(git diff --name-only HEAD~1 HEAD | awk -F/ '{print $1}' | sort -u)
           export CHANGED_DIRS
           echo "Changed directories: \"$CHANGED_DIRS\""
           echo "changed_dirs=\"$CHANGED_DIRS\"" >> "$GITHUB_OUTPUT"
 
+      - name: Check if only one directory was modified
+        id: check_single_dir
+        run: |
+          if [ "$(echo "$changed_dirs" | wc -l)" -ne 1 ]; then
+            echo "More than one directory was modified."
+            exit 1
+          fi
+          echo "Only one directory was modified."
+
       - name: Create bump and changelog
+        if:
+          success() &&
+          steps.check_single_dir.conclusion == 'success' &&
+          contains(steps.get_changed_dirs.outputs.changed_dirs, 'app')
         uses: commitizen-tools/commitizen-action@5b0848cd060263e24602d1eba03710e056ef7711 # v0.24.0
         with:
           working_directory: ${{ steps.get_changed_dirs.outputs.changed_dirs }}
