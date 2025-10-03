@@ -9,12 +9,60 @@ permissions:
   contents: read
 
 jobs:
+  get-changed-dirs:
+    runs-on: ubuntu-24.04
+    outputs:
+      changed_dirs: ${{ steps.get_changed_dirs.outputs.changed_dirs }}
+      dir_count: ${{ steps.dir_count.outputs.dir_count }}
+    steps:
+      - name: Harden the runner (Audit all outbound calls)
+        uses: step-security/harden-runner@ec9f2d5744a09debf3a187a3f4f675c53b671911 # v2.13.0
+        with:
+          egress-policy: audit
+
+      - name: Check out repository
+        uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # v5.0.0
+        with:
+          persist-credentials: false
+
+      - name: Fetch remote branches
+        run: >-
+          git fetch --no-tags --prune --depth=1 origin
+          +refs/heads/*:refs/remotes/origin/*
+
+      - name: Get changed directories
+        id: get_changed_dirs
+        env:
+          BASE_REF: ${{ github.base_ref }}
+          SHA: ${{ github.sha }}
+        run: |
+          CHANGED_DIRS="$(git diff --name-only origin/"$BASE_REF" "$SHA" | awk -F/ '{print $1}' | sort -u)"
+          export CHANGED_DIRS
+          echo "Changed directories: \"$CHANGED_DIRS\""
+          echo "changed_dirs=\"$CHANGED_DIRS\"" >> "$GITHUB_OUTPUT"
+
+      - name: Count number of modified directories
+        id: dir_count
+        run: |
+          DIR_COUNT="$(echo "$changed_dirs" | wc -l)
+          if [ "$DIR_COUNT" -ne 1 ]; then
+            echo "More than one directory was modified."
+          else
+            echo "Only one directory was modified."
+          fi
+          echo "dir_count=\"$DIR_COUNT\"" >> "$GITHUB_OUTPUT"
+
   pre-commit:
+    needs: get-changed-dirs
+    if:
+      needs.get-changed-dirs.outputs.dir_count == 1 ||
+      (
+        needs.get-changed-dirs.outputs.dir_count != 1 &&
+        contains(needs.get-changed-dirs.outputs.changed_dirs, 'app') == false
+      )
     permissions:
       actions: write
     runs-on: ubuntu-24.04
-    outputs:
-      changed_dir: ${{ steps.get_changed_dirs.outputs.changed_dirs }}
 
     steps:
       - name: Harden the runner (Audit all outbound calls)
@@ -22,7 +70,7 @@ jobs:
         with:
           egress-policy: audit
 
-      - name: Checkout
+      - name: Check out repository
         uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # v5.0.0
         with:
           persist-credentials: false
@@ -57,37 +105,11 @@ jobs:
           pre-commit install --install-hooks --hook-type pre-commit --hook-type commit-msg --hook-type pre-push
           pre-commit gc
 
-      - name: Fetch remote branches
-        run: >-
-          git fetch --no-tags --prune --depth=1 origin
-          +refs/heads/*:refs/remotes/origin/*
-
-      - name: Get changed directories
-        id: get_changed_dirs
-        env:
-          BASE_REF: ${{ github.base_ref }}
-          SHA: ${{ github.sha }}
-        run: |
-          CHANGED_DIRS="$(git diff --name-only origin/"$BASE_REF" "$SHA" | awk -F/ '{print $1}' | sort -u)"
-          export CHANGED_DIRS
-          echo "Changed directories: \"$CHANGED_DIRS\""
-          echo "changed_dirs=\"$CHANGED_DIRS\"" >> "$GITHUB_OUTPUT"
-
-      - name: Check if only one directory was modified
-        id: check_single_dir
-        run: |
-          if [ "$(echo "$changed_dirs" | wc -l)" -ne 1 ]; then
-            echo "More than one directory was modified."
-            exit 1
-          fi
-          echo "Only one directory was modified."
-
-      # Only install if the directory is 'app', as it is the only directory that is expected to have a Dockerfile
+      # Only install if the directory is 'app', as it is the only directory expected to have a Dockerfile.
       - name: Install hadolint
         if:
-          success() &&
-          steps.check_single_dir.conclusion == 'success' &&
-          contains(steps.get_changed_dirs.outputs.changed_dirs, 'app')
+          needs.get-changed-dirs.outputs.dir_count == 1 &&
+          contains(needs.get-changed-dirs.outputs.changed_dirs, 'app')
         run: >-
           curl -L "$(
           curl -s https://api.github.com/repos/hadolint/hadolint/releases/latest
@@ -97,7 +119,7 @@ jobs:
           && chmod +x hadolint && sudo mv hadolint /usr/bin/
 
       # Needed for re-running this workflow on the autofix commit.
-      - name: Checkout again for pre-commit
+      - name: Check out again for pre-commit
         uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # v5.0.0
         with:
           fetch-depth: 0
@@ -124,9 +146,13 @@ jobs:
           message: "[pre-commit] Autofix violations"
 
   app:
-    needs: pre-commit
+    needs:
+      - get-changed-dirs
+      - pre-commit
+    if:
+      needs.get-changed-dirs.outputs.dir_count == 1 &&
+      contains(needs.get-changed-dirs.outputs.changed_dirs, 'app')
     uses: ./.github/workflows/app.yaml
-    if: contains(needs.pre-commit.outputs.changed_dir, 'app')
     permissions:
       contents: read
       security-events: write
