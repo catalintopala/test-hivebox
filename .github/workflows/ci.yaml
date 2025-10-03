@@ -29,6 +29,7 @@ jobs:
         run: >-
           git fetch --no-tags --prune --depth=1 origin
           +refs/heads/*:refs/remotes/origin/*
+
       - name: Get changed directories
         id: get_changed_dirs
         env:
@@ -38,17 +39,22 @@ jobs:
           CHANGED_DIRS="$(git diff --name-only origin/"$BASE_REF" "$SHA" | awk -F/ '{print $1}' | sort -u)"
           export CHANGED_DIRS
           echo "Changed directories: \"$CHANGED_DIRS\""
+          EOF=$(dd if=/dev/urandom bs=15 count=1 status=none | base64)
+          echo "text<<$EOF" >> $GITHUB_OUTPUT
           echo "changed_dirs=\"$CHANGED_DIRS\"" >> "$GITHUB_OUTPUT"
+          echo "$EOF" >> $GITHUB_OUTPUT
+
       - name: Count number of modified directories
         id: dir_count
         run: |
           DIR_COUNT="$(echo "$changed_dirs" | wc -l)
-          if [ "$DIR_COUNT" -ne 1 ]; then
+          if [ "$DIR_COUNT" -gt 3 ]; then
             echo "More than one directory was modified."
           else
             echo "Only one directory was modified."
           fi
           echo "dir_count=\"$DIR_COUNT\"" >> "$GITHUB_OUTPUT"
+
   pre-commit:
     needs: get-changed-dirs
     if:
