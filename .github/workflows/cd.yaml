@@ -5,7 +5,7 @@ on:
     branches:
     - main
     paths:
-    - "app"
+    - "app/**"
 
 permissions:
   contents: read
@@ -21,14 +21,15 @@ jobs:
       packages: write
     defaults:
       run:
-        working-directory: "app"
+        working-directory: app
     steps:
     - name: Harden the runner (Audit all outbound calls)
       uses: step-security/harden-runner@ec9f2d5744a09debf3a187a3f4f675c53b671911 # v2.13.0
       with:
         egress-policy: audit
 
-    - uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # v5.0.0
+    - name: Check out repository
+      uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # v5.0.0
       with:
         persist-credentials: false
 
@@ -45,11 +46,8 @@ jobs:
       with:
         images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}
         tags: |
-          # Add a latest tag for main
           type=raw,value=latest
-          # Add a branch tag for main
           type=ref,event=branch
-          # For production tags (vX.Y.Z) automatically tags as latest
           type=semver,pattern={{version}}
           type=semver,pattern={{major}}.{{minor}}
           type=semver,pattern={{major}}
@@ -79,6 +77,8 @@ jobs:
       with:
         context: app
         push: true
-        platforms: linux/amd64, linux/arm64
+        platforms: linux/amd64,linux/arm64
         tags: ${{ steps.meta.outputs.tags }}
         labels: ${{ steps.meta.outputs.labels }}
+        cache-from: type=registry,ref=${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:buildcache
+        cache-to: type=registry,ref=${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:buildcache,mode=max
