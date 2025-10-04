@@ -44,7 +44,7 @@ jobs:
       - name: Count number of modified directories
         id: dir_count
         run: |
-          DIR_COUNT="$(printf "%s\n" "$changed_dirs" | wc -w)"
+          DIR_COUNT="$(expr length "$changed_dirs" - length "$(echo "$changed_dirs" | sed 's/ //g')" + 1)"
           if [ "$DIR_COUNT" -gt 1 ]; then
             echo "More than one directory was modified."
           else

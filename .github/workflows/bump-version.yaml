@@ -43,7 +43,8 @@ jobs:
       - name: Check if only one directory was modified
         id: check_single_dir
         run: |
-          if [ "$(echo "$changed_dirs" | wc -w)" -gt 1 ]; then
+          DIR_COUNT="$(expr length "$changed_dirs" - length "$(echo "$changed_dirs" | sed 's/ //g')" + 1)"
+          if [ "$DIR_COUNT" -gt 1 ]; then
             echo "More than one directory was modified."
             exit 1
           fi
