@@ -35,7 +35,7 @@ jobs:
         env:
           SHA: ${{ github.sha }}
         run: |
-          CHANGED_DIRS=$(git diff --name-only HEAD~1 HEAD | awk -F/ '{print $1}' | sort -u | tr '\n' ' ')
+          CHANGED_DIRS=$(git diff --name-only HEAD~1 HEAD | awk -F/ '{print $1}' | sort -u | tr '\n' ' ' | xargs)
           export CHANGED_DIRS
           echo "Changed directories: \"$CHANGED_DIRS\""
           echo "changed_dirs=\"$CHANGED_DIRS\"" >> "$GITHUB_OUTPUT"
@@ -43,7 +43,7 @@ jobs:
       - name: Check if only one directory was modified
         id: check_single_dir
         run: |
-          if [ "$(echo "$changed_dirs" | xargs | wc -w)" -gt 1 ]; then
+          if [ "$(echo "$changed_dirs" | wc -w)" -gt 1 ]; then
             echo "More than one directory was modified."
             exit 1
           fi
