@@ -44,7 +44,8 @@ jobs:
         id: check_single_dir
         run: |
           DIR_COUNT="$(echo "$changed_dirs" | head -n 1 | tr -cd ' \t\n' | wc -c)"
-          if [ "$((DIR_COUNT + 1))" -gt 1 ]; then
+          echo "$DIR_COUNT"
+          if [ "$DIR_COUNT" -gt 1 ]; then
             echo "More than one directory was modified."
             exit 1
           fi
