@@ -35,7 +35,7 @@ jobs:
         env:
           SHA: ${{ github.sha }}
         run: |
-          CHANGED_DIRS=$(git diff --name-only HEAD~1 HEAD | awk -F/ '{print $1}' | sort -u | tr '\n' ' ')
+          CHANGED_DIRS=$(git diff --name-only HEAD~1 HEAD | awk -F/ '{print $1}' | sort -u | xargs)
           export CHANGED_DIRS
           echo "Changed directories: \"$CHANGED_DIRS\""
           echo "changed_dirs=\"$CHANGED_DIRS\"" >> "$GITHUB_OUTPUT"
@@ -43,7 +43,8 @@ jobs:
       - name: Check if only one directory was modified
         id: check_single_dir
         run: |
-          if [ "$(echo "$changed_dirs" | xargs)" -gt 1 ]; then
+          DIR_COUNT="$(echo "$changed_dirs" | head -n 1 | tr -cd ' \t\n' | wc -c)"
+          if [ "$((DIR_COUNT + 1))" -gt 1 ]; then
             echo "More than one directory was modified."
             exit 1
           fi
@@ -53,7 +54,7 @@ jobs:
         if:
           success() &&
           steps.check_single_dir.conclusion == 'success' &&
-          contains(steps.get_changed_dirs.outputs.changed_dirs, 'app ')
+          contains(steps.get_changed_dirs.outputs.changed_dirs, 'app')
         uses: commitizen-tools/commitizen-action@5b0848cd060263e24602d1eba03710e056ef7711 # v0.24.0
         with:
           working_directory: ${{ steps.get_changed_dirs.outputs.changed_dirs }}
