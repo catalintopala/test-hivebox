@@ -89,6 +89,9 @@ jobs:
             **/pyproject.toml
             **/uv.lock
 
+      - name: Install pre-commit
+        run: uv tool install pre-commit
+
       - name: Cache pre-commit dependencies
         id: cache_pre_commit
         uses: actions/cache@2f8e54208210a422b2efd51efaa6bd6d7ca8920f # v3.4.3
@@ -98,10 +101,9 @@ jobs:
           path: ~/.cache/pre-commit
           key: ${{ env.cache-name }}-${{ hashFiles('.pre-commit-config.yaml', '~/.cache/pre-commit/*') }}
 
-      - name: Install pre-commit
+      - name: Install pre-commit hooks
         if: steps.cache_pre_commit.outputs.cache-hit != 'true'
         run: |
-          uv tool install pre-commit
           pre-commit install
           pre-commit gc
 
