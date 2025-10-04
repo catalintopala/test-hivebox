@@ -52,6 +52,12 @@ jobs:
             echo "Only one directory was modified."
           fi
           echo "dir_count=\"$DIR_COUNT\"" >> "$GITHUB_OUTPUT"
+      - env:
+          dir_count: ${{ steps.dir_count.outputs.dir_count }}
+          changed_dirs: ${{ steps.get_changed_dirs.outputs.changed_dirs }}
+        run: |
+          echo "$dir_count"
+          echo "$changed_dirs"
 
   pre-commit:
     needs: get-changed-dirs
