@@ -58,7 +58,7 @@ jobs:
       needs.get-changed-dirs.outputs.dir_count == 1 ||
       (
         needs.get-changed-dirs.outputs.dir_count != 1 &&
-        contains(needs.get-changed-dirs.outputs.changed_dirs, 'app') == false
+        contains(needs.get-changed-dirs.outputs.changed_dirs, 'app ') == false
       )
     permissions:
       actions: write
@@ -109,7 +109,7 @@ jobs:
       - name: Install hadolint
         if:
           needs.get-changed-dirs.outputs.dir_count == 1 &&
-          contains(needs.get-changed-dirs.outputs.changed_dirs, 'app')
+          contains(needs.get-changed-dirs.outputs.changed_dirs, 'app ')
         run: >-
           curl -L "$(
           curl -s https://api.github.com/repos/hadolint/hadolint/releases/latest
@@ -151,7 +151,7 @@ jobs:
       - pre-commit
     if:
       needs.get-changed-dirs.outputs.dir_count == 1 &&
-      contains(needs.get-changed-dirs.outputs.changed_dirs, 'app')
+      contains(needs.get-changed-dirs.outputs.changed_dirs, 'app ')
     uses: ./.github/workflows/app.yaml
     permissions:
       contents: read

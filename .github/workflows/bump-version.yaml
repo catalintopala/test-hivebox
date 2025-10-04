@@ -53,7 +53,7 @@ jobs:
         if:
           success() &&
           steps.check_single_dir.conclusion == 'success' &&
-          contains(steps.get_changed_dirs.outputs.changed_dirs, 'app')
+          contains(steps.get_changed_dirs.outputs.changed_dirs, 'app ')
         uses: commitizen-tools/commitizen-action@5b0848cd060263e24602d1eba03710e056ef7711 # v0.24.0
         with:
           working_directory: ${{ steps.get_changed_dirs.outputs.changed_dirs }}
