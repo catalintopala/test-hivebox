@@ -36,7 +36,7 @@ jobs:
           BASE_REF: ${{ github.base_ref }}
           SHA: ${{ github.sha }}
         run: |
-          CHANGED_DIRS="$(git diff --name-only origin/"$BASE_REF" "$SHA" | awk -F/ '{print $1}' | sort -u | tr '\n' ' ')"
+          CHANGED_DIRS="$(git diff --name-only origin/"$BASE_REF" "$SHA" | awk -F/ '{print $1}' | sort -u | tr '\n' ' ' | xargs)"
           export CHANGED_DIRS
           echo "Changed directories: \"$CHANGED_DIRS\""
           echo "changed_dirs=\"$CHANGED_DIRS\"" >> "$GITHUB_OUTPUT"
@@ -44,7 +44,7 @@ jobs:
       - name: Count number of modified directories
         id: dir_count
         run: |
-          DIR_COUNT="$(echo "$changed_dirs" | xargs)"
+          DIR_COUNT="$(echo "$changed_dirs" | wc -w)"
           if [ "$DIR_COUNT" -gt 1 ]; then
             echo "More than one directory was modified."
           else
@@ -89,6 +89,9 @@ jobs:
             **/pyproject.toml
             **/uv.lock
 
+      - name: Install pre-commit
+        run: uv tool install pre-commit
+
       - name: Cache pre-commit dependencies
         id: cache_pre_commit
         uses: actions/cache@2f8e54208210a422b2efd51efaa6bd6d7ca8920f # v3.4.3
@@ -98,11 +101,10 @@ jobs:
           path: ~/.cache/pre-commit
           key: ${{ env.cache-name }}-${{ hashFiles('.pre-commit-config.yaml', '~/.cache/pre-commit/*') }}
 
-      - name: Install pre-commit
+      - name: Install pre-commit hooks
         if: steps.cache_pre_commit.outputs.cache-hit != 'true'
         run: |
-          uv tool install pre-commit
-          pre-commit install --install-hooks --hook-type pre-commit --hook-type commit-msg --hook-type pre-push
+          pre-commit install
           pre-commit gc
 
       # Only install if the directory is 'app', as it is the only directory expected to have a Dockerfile
