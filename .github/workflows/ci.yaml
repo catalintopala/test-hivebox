@@ -36,31 +36,27 @@ jobs:
           BASE_REF: ${{ github.base_ref }}
           SHA: ${{ github.sha }}
         run: |
-          CHANGED_DIRS="$(git diff --name-only origin/"$BASE_REF" "$SHA" | awk -F/ '{print $1}' | sort -u | xargs)"
-          export CHANGED_DIRS
-          echo "Changed directories: \"$CHANGED_DIRS\""
-          echo "changed_dirs=\"$CHANGED_DIRS\"" >> "$GITHUB_OUTPUT"
+          git diff --name-only origin/"$BASE_REF" "$SHA" | awk -F/ '{print $1}' | sort -u > changed_dirs.txt
+
+      - name: Upload file with changed dirs
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+        with:
+          name: changed_dirs
+          path: changed_dirs.txt
 
       - name: Count number of modified directories
         id: dir_count
         run: |
-          DIR_COUNT="$(echo "$changed_dirs" | head -n 1 | tr -cd ' \t\n' | wc -c)"
-          echo "$DIR_COUNT"
-          if [ "$DIR_COUNT" -gt 1 ]; then
-            echo "More than one directory was modified."
-          else
-            echo "Only one directory was modified."
-          fi
-          echo "dir_count=\"$DIR_COUNT\"" >> "$GITHUB_OUTPUT"
+          wc -l changed_dirs.txt > dir_count.txt
+
+      - name: Upload file with changed dirs
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+        with:
+          name: dir_count
+          path: dir_count.txt
 
   pre-commit:
     needs: get-changed-dirs
-    if:
-      needs.get-changed-dirs.outputs.dir_count == 1 ||
-      (
-        needs.get-changed-dirs.outputs.dir_count != 1 &&
-        contains(needs.get-changed-dirs.outputs.changed_dirs, 'app') == false
-      )
     permissions:
       actions: write
     runs-on: ubuntu-24.04
@@ -70,6 +66,36 @@ jobs:
         uses: step-security/harden-runner@ec9f2d5744a09debf3a187a3f4f675c53b671911 # v2.13.0
         with:
           egress-policy: audit
+
+      - name: Download changed dirs file
+        uses: actions/download-artifact@634f93cb2916e3fdff6788551b99b062d0335ce0 # v5.0.0
+        with:
+          name: changed_dirs
+
+      - name: Download dir count file
+        uses: actions/download-artifact@634f93cb2916e3fdff6788551b99b062d0335ce0 # v5.0.0
+        with:
+          name: dir_count
+
+      - name: Check if only one dir from the monorepo was modified, except .github and root
+        shell: python
+        run: |
+          import sys
+
+          def check_files(changed_dirs, dir_count):
+            projects = ["app"]
+
+            with open(changed_dirs, 'r') as cd:
+              dirs = cd.read().splitlines()
+
+            with open(dir_count, 'r') as dc:
+              count = int(dc.read().strip())
+
+            if any(project in dirs for project in projects):
+              if count != 1:
+                sys.exit(1)
+
+          check_files('changed_dirs.txt', 'dir_count.txt')
 
       - name: Check out repository
         uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # v5.0.0
