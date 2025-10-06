@@ -47,7 +47,7 @@ jobs:
       - name: Count number of modified directories
         id: dir_count
         run: |
-          wc -l changed_dirs.txt > dir_count.txt
+          wc -l changed_dirs.txt | awk '{print $1}' > dir_count.txt
 
       - name: Upload file with changed dirs
         uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
