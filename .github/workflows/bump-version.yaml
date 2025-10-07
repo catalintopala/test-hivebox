@@ -30,35 +30,18 @@ jobs:
           fetch-depth: 0
           token: "${{ secrets.TEST_HIVEBOX_COMMITIZEN_TOKEN }}"
 
-      - name: Get changed directories
-        id: get_changed_dirs
-        env:
-          SHA: ${{ github.sha }}
+      - name: Get changed directory
+        id: get_changed_dir
         run: |
-          CHANGED_DIRS=$(git diff --name-only HEAD~1 HEAD | awk -F/ '{print $1}' | sort -u | xargs)
-          export CHANGED_DIRS
-          echo "Changed directories: \"$CHANGED_DIRS\""
-          echo "changed_dirs=\"$CHANGED_DIRS\"" >> "$GITHUB_OUTPUT"
-
-      - name: Check if only one directory was modified
-        id: check_single_dir
-        run: |
-          DIR_COUNT="$(echo "$changed_dirs" | head -n 1 | tr -cd ' \t\n' | wc -c)"
-          echo "$DIR_COUNT"
-          if [ "$DIR_COUNT" -gt 1 ]; then
-            echo "More than one directory was modified."
-            exit 1
-          fi
-          echo "Only one directory was modified."
+          CHANGED_DIR=$(git diff --name-only HEAD~1 HEAD | awk -F/ '{print $1}' | sort -u | xargs)
+          export CHANGED_DIR
+          echo "Changed directory: \"$CHANGED_DIR\""
+          echo "changed_dir=\"$CHANGED_DIR\"" >> "$GITHUB_OUTPUT"
 
       - name: Create bump and changelog
-        if:
-          success() &&
-          steps.check_single_dir.conclusion == 'success' &&
-          contains(steps.get_changed_dirs.outputs.changed_dirs, 'app')
         uses: commitizen-tools/commitizen-action@5b0848cd060263e24602d1eba03710e056ef7711 # v0.24.0
         with:
-          working_directory: ${{ steps.get_changed_dirs.outputs.changed_dirs }}
+          working_directory: ${{ steps.get_changed_dir.outputs.changed_dir }}
           github_token: ${{ secrets.TEST_HIVEBOX_COMMITIZEN_TOKEN }}
           changelog_increment_filename: body.md
           check_consistency: true

@@ -11,8 +11,8 @@ jobs:
     if: (github.actor != 'dependabot[bot]')
     permissions:
       # This permission is required when uploading sarifs to GitHub
-      security-events: write
       actions: read
+      security-events: write
     defaults:
       run:
         working-directory: app
