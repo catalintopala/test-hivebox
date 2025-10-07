@@ -149,7 +149,7 @@ jobs:
 
       - name: Run pre-commit hooks
         env:
-          BASE_REF: ${{ github.event.pull_request.base.sha }}
+          BASE_REF: ${{ github.base_ref }}
           SHA: ${{ github.event.pull_request.head.sha }}
         run: >-
           pre-commit run
