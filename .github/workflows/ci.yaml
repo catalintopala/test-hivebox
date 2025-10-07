@@ -34,15 +34,9 @@ jobs:
         id: get_changed_dirs
         env:
           BASE_REF: ${{ github.base_ref }}
-          SHA: ${{ github.sha }}
+          SHA: ${{ github.event.pull_request.head.sha }}
         run: |
-          git diff --name-only origin/"$BASE_REF" "$SHA" | awk -F/ '{print $1}' | sort -u > changed_dirs.txt
-
-      - name: Upload file with changed dirs
-        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
-        with:
-          name: changed_dirs
-          path: changed_dirs.txt
+          git diff --name-only origin/"$BASE_REF" "$SHA" | awk -F/ '{print $1}' | sort -u | xargs > changed_dirs.txt
 
       - name: Count number of modified directories
         id: dir_count
@@ -52,13 +46,15 @@ jobs:
       - name: Upload file with changed dirs
         uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
         with:
-          name: dir_count
-          path: dir_count.txt
+          name: changed_dirs_and_dir_count
+          path: |
+            changed_dirs.txt
+            dir_count.txt
 
   pre-commit:
     needs: get-changed-dirs
     permissions:
-      actions: write
+      contents: write
     runs-on: ubuntu-24.04
 
     steps:
@@ -70,12 +66,7 @@ jobs:
       - name: Download changed dirs file
         uses: actions/download-artifact@634f93cb2916e3fdff6788551b99b062d0335ce0 # v5.0.0
         with:
-          name: changed_dirs
-
-      - name: Download dir count file
-        uses: actions/download-artifact@634f93cb2916e3fdff6788551b99b062d0335ce0 # v5.0.0
-        with:
-          name: dir_count
+          name: changed_dirs_and_dir_count
 
       - name: Check if only one dir from the monorepo was modified, except .github and root
         shell: python
@@ -153,13 +144,13 @@ jobs:
         with:
           fetch-depth: 0
           persist-credentials: false
-          ref: ${{ github.sha }}
+          ref: ${{ github.event.pull_request.head.sha }}
           token: ${{ secrets.TEST_HIVEBOX_AUTOFIX_COMMIT_KEY }}
 
       - name: Run pre-commit hooks
         env:
-          BASE_REF: ${{ github.base_ref }}
-          SHA: ${{ github.sha }}
+          BASE_REF: ${{ github.event.pull_request.base.sha }}
+          SHA: ${{ github.event.pull_request.head.sha }}
         run: >-
           pre-commit run
           --from-ref origin/"$BASE_REF"
@@ -183,6 +174,6 @@ jobs:
       contains(needs.get-changed-dirs.outputs.changed_dirs, 'app')
     uses: ./.github/workflows/app.yaml
     permissions:
+      actions: read
       contents: read
       security-events: write
-      actions: read
