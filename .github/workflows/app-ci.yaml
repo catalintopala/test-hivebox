@@ -98,6 +98,10 @@ jobs:
     defaults:
       run:
         working-directory: app
+    permissions:
+      actions: read
+      packages: write
+      security-events: write
 
     steps:
       - name: Check out repository

@@ -177,6 +177,6 @@ jobs:
     with:
       sha: ${{ github.event.pull_request.head.sha }}
     permissions:
-      actions: read
       contents: read
+      actions: read
       security-events: write
