@@ -52,7 +52,7 @@ jobs:
         env:
           dir_count: ${{ steps.dir_count.outputs.dir_count }}
         run: |
-          import
+          import os
           import sys
 
           def check_files(changed_dirs):
