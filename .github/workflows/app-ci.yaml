@@ -159,7 +159,7 @@ jobs:
           scan-type: 'image'
           image-ref: '${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ inputs.sha }}'
           format: 'sarif'
-          output: 'trivy-docker-results.sarif'
+          output: 'trivy-docker-results-pr.sarif'
           ignore-unfixed: true
           severity: 'CRITICAL'
           scanners: 'vuln,secret,misconfig'
@@ -168,4 +168,4 @@ jobs:
       - name: Upload Trivy scan results to GitHub Security tab
         uses: github/codeql-action/upload-sarif@d3678e237b9c32a6c9bffb3315c335f976f3549f # v3.30.2
         with:
-          sarif_file: 'trivy-docker-results.sarif'
+          sarif_file: 'trivy-docker-results-pr.sarif'

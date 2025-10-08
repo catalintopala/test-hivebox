@@ -39,7 +39,6 @@ jobs:
           echo "CHANGED_DIR=$CHANGED_DIR" >> "$GITHUB_ENV"
 
       - name: Create bump and changelog
-        id: cz
         uses: commitizen-tools/commitizen-action@5b0848cd060263e24602d1eba03710e056ef7711 # v0.24.0
         with:
           working_directory: ${{ env.CHANGED_DIR }}
@@ -51,5 +50,5 @@ jobs:
         uses: softprops/action-gh-release@6cbd405e2c4e67a21c47fa9e383d020e4e28b836 # v2.3.3
         with:
           body_path: "body.md"
-          tag_name: v${{ steps.cz.outputs.version }}
+          tag_name: v${{ env.REVISION }}
           token: ${{ secrets.TEST_HIVEBOX_COMMITIZEN_TOKEN }}
