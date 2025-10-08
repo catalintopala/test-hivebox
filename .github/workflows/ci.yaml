@@ -9,10 +9,10 @@ permissions:
   contents: read
 
 jobs:
-  get-changed-dirs:
+  get-changed-dir:
     runs-on: ubuntu-24.04
     outputs:
-      changed_dirs: ${{ steps.get_changed_dirs.outputs.changed_dirs }}
+      changed_dir: ${{ steps.get_changed_dir.outputs.changed_dir }}
       dir_count: ${{ steps.dir_count.outputs.dir_count }}
 
     steps:
@@ -32,28 +32,49 @@ jobs:
           +refs/heads/*:refs/remotes/origin/*
 
       - name: Get changed directories
-        id: get_changed_dirs
         env:
           BASE_REF: ${{ github.base_ref }}
           SHA: ${{ github.event.pull_request.head.sha }}
         run: |
           git diff --name-only origin/"$BASE_REF" "$SHA" | awk -F/ '{print $1}' | sort -u | xargs > changed_dirs.txt
+          echo "Changed directories: \"$(cat changed_dirs.txt)\""
 
       - name: Count number of modified directories
         id: dir_count
         run: |
-          wc -l changed_dirs.txt | awk '{print $1}' > dir_count.txt
+          DIR_COUNT="$(wc -l changed_dirs.txt | awk '{print $1}')"
+          export DIR_COUNT
+          echo "Number of changed directories: \"$DIR_COUNT\""
+          echo "dir_count=\"$DIR_COUNT\"" >> "$GITHUB_OUTPUT"
 
-      - name: Upload file with changed dirs
-        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
-        with:
-          name: changed_dirs_and_dir_count
-          path: |
-            changed_dirs.txt
-            dir_count.txt
+      - name: Check if only one dir from the monorepo was modified, except .github and root
+        shell: python
+        env:
+          dir_count: ${{ steps.dir_count.outputs.dir_count }}
+        run: |
+          import os
+          import sys
+
+          def check_files(changed_dirs):
+            projects = ["app"]
+
+            with open(changed_dirs, 'r') as cd:
+              dirs = cd.read().splitlines()
+
+            if any(project in dirs for project in projects):
+              if os.environ['dir_count'] != 1:
+                sys.exit(1)
+
+          check_files('changed_dirs.txt')
+
+      - name: Create output for changed directories
+        id: get_changed_dir
+        if: steps.dir_count.outputs.dir_count == 1
+        run: |
+          echo "changed_dir=\"$(cat changed_dirs.txt)\"" >> "$GITHUB_OUTPUT"
 
   pre-commit:
-    needs: get-changed-dirs
+    needs: get-changed-dir
     permissions:
       contents: write
     runs-on: ubuntu-24.04
@@ -63,31 +84,6 @@ jobs:
         uses: step-security/harden-runner@ec9f2d5744a09debf3a187a3f4f675c53b671911 # v2.13.0
         with:
           egress-policy: audit
-
-      - name: Download changed dirs file
-        uses: actions/download-artifact@634f93cb2916e3fdff6788551b99b062d0335ce0 # v5.0.0
-        with:
-          name: changed_dirs_and_dir_count
-
-      - name: Check if only one dir from the monorepo was modified, except .github and root
-        shell: python
-        run: |
-          import sys
-
-          def check_files(changed_dirs, dir_count):
-            projects = ["app"]
-
-            with open(changed_dirs, 'r') as cd:
-              dirs = cd.read().splitlines()
-
-            with open(dir_count, 'r') as dc:
-              count = int(dc.read().strip())
-
-            if any(project in dirs for project in projects):
-              if count != 1:
-                sys.exit(1)
-
-          check_files('changed_dirs.txt', 'dir_count.txt')
 
       - name: Check out repository
         uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # v5.0.0
@@ -129,8 +125,8 @@ jobs:
       # Only install if the directory is 'app', as it is the only directory expected to have a Dockerfile
       - name: Install hadolint
         if:
-          needs.get-changed-dirs.outputs.dir_count == 1 &&
-          contains(needs.get-changed-dirs.outputs.changed_dirs, 'app')
+          needs.get-changed-dir.outputs.dir_count == 1 &&
+          contains(needs.get-changed-dir.outputs.changed_dir, 'app')
         run: >-
           curl -L "$(
           curl -s https://api.github.com/repos/hadolint/hadolint/releases/latest
@@ -168,11 +164,11 @@ jobs:
 
   app:
     needs:
-      - get-changed-dirs
+      - get-changed-dir
       - pre-commit
     if:
-      needs.get-changed-dirs.outputs.dir_count == 1 &&
-      contains(needs.get-changed-dirs.outputs.changed_dirs, 'app')
+      needs.get-changed-dir.outputs.dir_count == 1 &&
+      contains(needs.get-changed-dir.outputs.changed_dir, 'app')
     uses: ./.github/workflows/app-ci.yaml
     with:
       sha: ${{ github.event.pull_request.head.sha }}
