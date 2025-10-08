@@ -62,14 +62,14 @@ jobs:
               dirs = cd.read().splitlines()
 
             if any(project in dirs for project in projects):
-              if os.environ['dir_count'] != 1:
+              if os.environ['dir_count'] != "1":
                 sys.exit(1)
 
           check_files('changed_dirs.txt')
 
       - name: Create output for changed directories
         id: get_changed_dir
-        if: steps.dir_count.outputs.dir_count == 1
+        if: steps.dir_count.outputs.dir_count == '1'
         run: |
           echo "changed_dir=\"$(cat changed_dirs.txt)\"" >> "$GITHUB_OUTPUT"
 
@@ -126,7 +126,7 @@ jobs:
       - name: Install hadolint
         if:
           needs.get-changed-dir.outputs.dir_count == 1 &&
-          contains(needs.get-changed-dir.outputs.changed_dir, 'app')
+          needs.get-changed-dir.outputs.changed_dir == 'app'
         run: >-
           curl -L "$(
           curl -s https://api.github.com/repos/hadolint/hadolint/releases/latest
@@ -168,7 +168,7 @@ jobs:
       - pre-commit
     if:
       needs.get-changed-dir.outputs.dir_count == 1 &&
-      contains(needs.get-changed-dir.outputs.changed_dir, 'app')
+      needs.get-changed-dir.outputs.changed_dir == 'app'
     uses: ./.github/workflows/app-ci.yaml
     with:
       sha: ${{ github.event.pull_request.head.sha }}
