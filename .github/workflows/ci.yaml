@@ -43,14 +43,12 @@ jobs:
         id: dir_count
         run: |
           DIR_COUNT="$(wc -l changed_dirs.txt | awk '{print $1}')"
-          export DIR_COUNT
           echo "Number of changed directories: \"$DIR_COUNT\""
-          echo "dir_count=\"$DIR_COUNT\"" >> "$GITHUB_OUTPUT"
+          echo "DIR_COUNT=$DIR_COUNT" >> "$GITHUB_ENV"
+          echo "dir_count=$DIR_COUNT" >> "$GITHUB_OUTPUT"
 
       - name: Check if only one dir from the monorepo was modified, except .github and root
         shell: python
-        env:
-          dir_count: ${{ steps.dir_count.outputs.dir_count }}
         run: |
           import os
           import sys
@@ -61,15 +59,16 @@ jobs:
             with open(changed_dirs, 'r') as cd:
               dirs = cd.read().splitlines()
 
+            print(os.environ['DIR_COUNT'])
             if any(project in dirs for project in projects):
-              if os.environ['dir_count'] != "1":
+              if os.environ['DIR_COUNT'] != "1":
                 sys.exit(1)
 
           check_files('changed_dirs.txt')
 
       - name: Create output for changed directories
         id: get_changed_dir
-        if: steps.dir_count.outputs.dir_count == '1'
+        if: env.DIR_COUNT == '1'
         run: |
           echo "changed_dir=\"$(cat changed_dirs.txt)\"" >> "$GITHUB_OUTPUT"
 
@@ -111,10 +110,10 @@ jobs:
         id: cache_pre_commit
         uses: actions/cache@2f8e54208210a422b2efd51efaa6bd6d7ca8920f # v3.4.3
         env:
-          cache-name: cache-pre-commit
+          CACHE-NAME: cache-pre-commit
         with:
           path: ~/.cache/pre-commit
-          key: ${{ env.cache-name }}-${{ hashFiles('.pre-commit-config.yaml', '~/.cache/pre-commit/*') }}
+          key: ${{ env.CACHE-NAME }}-${{ hashFiles('.pre-commit-config.yaml', '~/.cache/pre-commit/*') }}
 
       - name: Install pre-commit hooks
         if: steps.cache_pre_commit.outputs.cache-hit != 'true'

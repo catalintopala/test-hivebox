@@ -2,8 +2,8 @@ name: Bump version
 
 on:
   push:
-    branches:
-      - main
+    tags:
+      - "v*.*.*"
     paths:
       - "app/**"
 
@@ -35,14 +35,14 @@ jobs:
         id: get_changed_dir
         run: |
           CHANGED_DIR="$(git diff --name-only HEAD~1 HEAD | awk -F/ '{print $1}' | sort -u | xargs)"
-          export CHANGED_DIR
           echo "Changed directory: \"$CHANGED_DIR\""
-          echo "changed_dir=\"$CHANGED_DIR\"" >> "$GITHUB_OUTPUT"
+          echo "CHANGED_DIR=$CHANGED_DIR" >> "$GITHUB_ENV"
 
       - name: Create bump and changelog
+        id: cz
         uses: commitizen-tools/commitizen-action@5b0848cd060263e24602d1eba03710e056ef7711 # v0.24.0
         with:
-          working_directory: ${{ steps.get_changed_dir.outputs.changed_dir }}
+          working_directory: ${{ env.CHANGED_DIR }}
           github_token: ${{ secrets.TEST_HIVEBOX_COMMITIZEN_TOKEN }}
           changelog_increment_filename: body.md
           check_consistency: true
@@ -51,6 +51,5 @@ jobs:
         uses: softprops/action-gh-release@6cbd405e2c4e67a21c47fa9e383d020e4e28b836 # v2.3.3
         with:
           body_path: "body.md"
-          tag_name: ${{ env.REVISION }}
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          tag_name: v${{ steps.cz.outputs.version }}
+          token: ${{ secrets.TEST_HIVEBOX_COMMITIZEN_TOKEN }}
