@@ -73,7 +73,7 @@ jobs:
         id: get_changed_dir
         if: steps.dir_count.outputs.dir_count == '1'
         run: |
-          echo "changed_dir=\"$(cat changed_dirs.txt)\"" >> "$GITHUB_OUTPUT"
+          echo "changed_dir=$(cat changed_dirs.txt)" >> "$GITHUB_OUTPUT"
 
   pre-commit:
     needs: get-changed-dir
