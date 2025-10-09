@@ -25,6 +25,8 @@ jobs:
         uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # v5.0.0
         with:
           persist-credentials: false
+          fetch-depth: 0
+          ref: ${{ github.event.pull_request.head.sha }}
 
       - name: Fetch remote branches
         run: >-
@@ -55,14 +57,14 @@ jobs:
           import sys
 
           def check_files(changed_dirs):
-            projects = ["app"]
+            projects = ['app']
 
             with open(changed_dirs, 'r') as cd:
               dirs = cd.read().splitlines()
 
             print(os.environ['DIR_COUNT'])
             if any(project in dirs for project in projects):
-              if os.environ['DIR_COUNT'] != "1":
+              if os.environ['DIR_COUNT'] != '1':
                 sys.exit(1)
 
           check_files('changed_dirs.txt')
