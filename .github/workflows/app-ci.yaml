@@ -48,8 +48,42 @@ jobs:
           sarif_file: app/semgrep.sarif
         if: always()
 
-  pytest:
+  trivy-code-scan:
     needs: semgrep
+    runs-on: ubuntu-24.04
+
+    steps:
+      - name: Harden the runner (Audit all outbound calls)
+        uses: step-security/harden-runner@ec9f2d5744a09debf3a187a3f4f675c53b671911 # v2.13.0
+        with:
+          egress-policy: audit
+
+      - name: Check out repository
+        uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # v5.0.0
+        with:
+          persist-credentials: false
+
+      - name: Install Trivy
+        uses: aquasecurity/setup-trivy@e6c2c5e321ed9123bda567646e2f96565e34abe1 # v0.2.4
+        with:
+          version: v0.67.0
+          cache: true
+
+      - name: Run Trivy vulnerability scanner
+        uses: aquasecurity/trivy-action@b6643a29fecd7f34b3597bc6acb0a98b03d33ff8 # v0.33.1
+        with:
+          scan-type: 'fs'
+          image-ref: '${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:pr'
+          format: 'table'
+          ignore-unfixed: true
+          severity: 'CRITICAL,HIGH'
+          scanners: 'vuln,misconfig'
+          skip-setup-trivy: true
+
+  pytest:
+    needs:
+      - semgrep
+      - trivy-code-scan
     runs-on: ubuntu-24.04
 
     steps:
@@ -90,6 +124,7 @@ jobs:
   docker:
     needs:
       - semgrep
+      - trivy-code-scan
       - pytest
     runs-on: ubuntu-24.04
     permissions:
@@ -159,14 +194,8 @@ jobs:
         with:
           scan-type: 'image'
           image-ref: '${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:pr'
-          format: 'sarif'
-          output: 'trivy-docker-results-pr.sarif'
+          format: 'table'
           ignore-unfixed: true
-          severity: 'CRITICAL'
+          severity: 'CRITICAL,HIGH'
           scanners: 'vuln,misconfig'
           skip-setup-trivy: true
-
-      - name: Upload Trivy scan results to GitHub Security tab
-        uses: github/codeql-action/upload-sarif@d3678e237b9c32a6c9bffb3315c335f976f3549f # v3.30.2
-        with:
-          sarif_file: 'trivy-docker-results-pr.sarif'
