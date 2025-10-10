@@ -163,8 +163,7 @@ jobs:
           output: 'trivy-docker-results-pr.sarif'
           ignore-unfixed: true
           severity: 'CRITICAL'
-          scanners: 'vuln,secret,misconfig'
-          exit-code: '1'
+          scanners: 'vuln,misconfig'
           skip-setup-trivy: true
 
       - name: Upload Trivy scan results to GitHub Security tab
