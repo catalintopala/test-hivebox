@@ -1,0 +1,26 @@
+name: 'Run Semgrep for Code Analysis'
+description: 'This action runs Semgrep to perform static analysis on your code, identifying potential bugs, security vulnerabilities, and enforcing coding standards.'
+
+inputs:
+  upload-sarif:
+    description: 'Whether to upload the generated SARIF file'
+    required: false
+    default: 'false'
+  dir:
+    description: 'The directory where to run the scan'
+    required: true
+
+runs:
+  using: "composite"
+  steps:
+    - name: Run semgrep
+      working-directory: ${{ inputs.dir }}
+      shell: bash
+      run: |
+        semgrep scan --config auto ${{ inputs.upload-sarif && '--sarif > semgrep.sarif' }}
+
+    - name: Upload SARIF file for GitHub Advanced Security Dashboard
+      if: always() && inputs.upload-sarif == 'true'
+      uses: github/codeql-action/upload-sarif@d3678e237b9c32a6c9bffb3315c335f976f3549f # v3.30.2
+      with:
+        sarif_file: ${{ inputs.dir }}/semgrep.sarif

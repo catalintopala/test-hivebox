@@ -1,22 +1,18 @@
-name: Bump version
+name: Release
 
 on:
-  push:
-    tags:
-      - "v*.*.*"
-    paths:
-      - "app/**"
+  workflow_call:
 
 permissions:
   contents: read
 
 jobs:
-  bump-version:
+  release:
+    name: release
     permissions:
       contents: write
     if: startsWith(github.event.head_commit.message, 'bump:') == false
     runs-on: ubuntu-24.04
-    name: "Bump version and create changelog with commitizen"
 
     steps:
       - name: Harden the runner (Audit all outbound calls)
@@ -27,27 +23,29 @@ jobs:
       - name: Check out repository
         uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # v5.0.0
         with:
+          fetch-depth: 0
           persist-credentials: false
-          token: "${{ secrets.TEST_HIVEBOX_COMMITIZEN_TOKEN }}"
+          token: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Get changed directory
-        id: get_changed_dir
+        id: get-changed-dir
         run: |
           CHANGED_DIR="$(git diff --name-only HEAD~1 HEAD | awk -F/ '{print $1}' | sort -u | xargs)"
           echo "Changed directory: \"$CHANGED_DIR\""
           echo "CHANGED_DIR=$CHANGED_DIR" >> "$GITHUB_ENV"
 
       - name: Create bump and changelog
+        id: cz
         uses: commitizen-tools/commitizen-action@5b0848cd060263e24602d1eba03710e056ef7711 # v0.24.0
         with:
           working_directory: ${{ env.CHANGED_DIR }}
-          github_token: ${{ secrets.TEST_HIVEBOX_COMMITIZEN_TOKEN }}
+          github_token: ${{ secrets.GITHUB_TOKEN }}
           changelog_increment_filename: body.md
           check_consistency: true
 
       - name: Release
         uses: softprops/action-gh-release@6cbd405e2c4e67a21c47fa9e383d020e4e28b836 # v2.3.3
         with:
-          body_path: "body.md"
-          tag_name: v${{ env.REVISION }}
-          token: ${{ secrets.TEST_HIVEBOX_COMMITIZEN_TOKEN }}
+          body_path: "${{ env.CHANGED_DIR }}/body.md"
+          tag_name: "v${{ steps.cz.outputs.version }}-${{ env.CHANGED_DIR }}"
+          token: ${{ secrets.GITHUB_TOKEN }}

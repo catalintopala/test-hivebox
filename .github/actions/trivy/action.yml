@@ -1,0 +1,67 @@
+name: 'Run Trivy for Vulnerability Scanning'
+description: 'This action runs Trivy to scan your container images or Git repositories for known vulnerabilities.'
+
+inputs:
+  scan-type:
+    description: 'Which type of scan Trivy must use'
+    required: true
+  scan-ref:
+    description: 'Tells Trivy what and where to scan'
+    required: true
+  format:
+    description: 'Which format should the Trivy scan output be'
+    required: true
+    default: 'table'
+  output:
+    description: 'Relative path and name for the output file'
+    required: false
+    default: ''
+  github-token:
+    description: 'Whether the action needs a GitHub token to upload to GitHub Dependency Graph'
+    required: false
+    default: 'false'
+  upload-sarif:
+    description: 'Whether the action should upload a SARIF file to GitHub Advanced Security Dashboard'
+    required: false
+    default: 'false'
+  upload-artifact:
+    description: 'Whether the action should upload the report as an artifact'
+    required: false
+    default: 'false'
+
+runs:
+  using: "composite"
+  steps:
+    - name: Scan using Trivy
+      uses: aquasecurity/trivy-action@b6643a29fecd7f34b3597bc6acb0a98b03d33ff8 # v0.33.1
+      with:
+        scan-type: ${{ inputs.scan-type }}
+        scan-ref: ${{ inputs.scan-ref }}
+        format: ${{ inputs.format }}
+        ${{ inputs.output != '' && 'output' }}: ${{ inputs.output }}
+        ${{ inputs.github-token == 'true' && 'github-token' }}: ${{ secrets.GITHUB_TOKEN }}
+        ignore-unfixed: true
+        scanners: 'vuln,misconfig'
+        severity: 'CRITICAL,HIGH'
+        skip-setup-trivy: true
+
+    - name: Get file name
+      if: inputs.upload-sarif == 'true' || inputs.upload-artifact == 'true'
+      shell: bash
+      run: |
+        echo "FILE_NAME=$(echo "${OUTPUT_FILE%.*}")" >> "GITHUB_ENV"
+      env:
+        OUTPUT_FILE: ${{ inputs.output }}
+
+    - name: Upload Trivy scan results to GitHub Security tab
+      if: inputs.upload-sarif == 'true' && inputs.format == 'sarif'
+      uses: github/codeql-action/upload-sarif@d3678e237b9c32a6c9bffb3315c335f976f3549f # v3.30.2
+      with:
+        sarif_file: ${{ inputs.output }}
+
+    - name: Upload Trivy report as a GitHub artifact
+      if: inputs.upload-artifact == 'true' && inputs.format == 'github'
+      uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+      with:
+        name: ${{ env.FILE_NAME }}
+        path: ${{ inputs.output }}
