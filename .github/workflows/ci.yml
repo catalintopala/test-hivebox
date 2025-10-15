@@ -54,10 +54,10 @@ jobs:
           import os
           import sys
 
-          def check_files(changed-dirs):
+          def check_files(changed_dirs):
             projects = ['app']
 
-            with open(changed-dirs, 'r') as cd:
+            with open(changed_dirs, 'r') as cd:
               dirs = cd.read().splitlines()
 
             print(os.environ['DIR_COUNT'])
