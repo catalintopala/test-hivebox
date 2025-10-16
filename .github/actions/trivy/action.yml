@@ -1,23 +1,23 @@
-name: 'Run Trivy for Vulnerability Scanning'
-description: 'This action runs Trivy to scan your container images or Git repositories for known vulnerabilities.'
+name: 'Trivy'
+description: 'Scans container images for vulnerabilities with Trivy'
 
 inputs:
   scan-type:
-    description: 'Which type of scan Trivy must use'
+    description: 'Scan type to use for scanning vulnerability'
     required: true
   scan-ref:
-    description: 'Tells Trivy what and where to scan'
+    description: 'Scan reference'
     required: true
   format:
-    description: 'Which format should the Trivy scan output be'
+    description: 'Output format'
     required: true
     default: 'table'
   output:
-    description: 'Relative path and name for the output file'
+    description: 'Writes results to a file with a specified file name'
     required: false
     default: ''
   github-pat:
-    description: 'GitHub token used to upload to GitHub Dependency Graph'
+    description: 'GitHub Personal Access Token (PAT) for submitting SBOM to GitHub Dependency Graph'
     required: false
     default: ''
   upload-sarif:
@@ -38,8 +38,8 @@ runs:
         scan-type: ${{ inputs.scan-type }}
         scan-ref: ${{ inputs.scan-ref }}
         format: ${{ inputs.format }}
-        ${{ inputs.output != '' && 'output' }}: ${{ inputs.output }}
-        ${{ inputs.github-pat != '' && 'github-pat' }}: ${{ inputs.github-pat }}
+        output: ${{ inputs.output }}
+        github-pat: ${{ inputs.github-pat }}
         ignore-unfixed: true
         scanners: 'vuln,misconfig'
         severity: 'CRITICAL,HIGH'
