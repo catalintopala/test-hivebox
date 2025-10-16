@@ -138,7 +138,7 @@ jobs:
         with:
           images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}
           tags: |
-            type=raw,value=${{ github.ref_name }}
+            type=raw,value=pr
 
       - name: Display metadata
         run: |
@@ -180,5 +180,5 @@ jobs:
         uses: ./.github/actions/trivy
         with:
           scan-type: 'image'
-          scan-ref: '${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ github.ref_name }}'
+          scan-ref: '${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:pr'
           format: 'table'
