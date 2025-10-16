@@ -45,14 +45,6 @@ runs:
         severity: 'CRITICAL,HIGH'
         skip-setup-trivy: true
 
-    - name: Get file name
-      if: inputs.upload-sarif == 'true' || inputs.upload-artifact == 'true'
-      shell: bash
-      run: |
-        echo "FILE_NAME=$(echo "${OUTPUT_FILE%.*}")" >> "GITHUB_ENV"
-      env:
-        OUTPUT_FILE: ${{ inputs.output }}
-
     - name: Upload Trivy scan results to GitHub Security tab
       if: inputs.upload-sarif == 'true' && inputs.format == 'sarif'
       uses: github/codeql-action/upload-sarif@d3678e237b9c32a6c9bffb3315c335f976f3549f # v3.30.2
