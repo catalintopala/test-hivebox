@@ -55,7 +55,7 @@ jobs:
           fetch-depth: 0
           persist-credentials: false
 
-      - name: Run Trivy vulnerability scanner for app code
+      - name: Run Trivy vulnerability scanner in fs mode
         uses: ./.github/actions/trivy
         with:
           scan-type: 'fs'

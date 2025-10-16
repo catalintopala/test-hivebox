@@ -57,7 +57,7 @@ jobs:
           version: v0.67.0
           cache: true
 
-      - name: Run Trivy vulnerability scanner
+      - name: Run Trivy vulnerability scanner in fs mode
         uses: ./.github/actions/trivy
         with:
           scan-type: 'fs'
@@ -151,7 +151,6 @@ jobs:
           format: 'sarif'
           output: 'trivy-docker-results.sarif'
           upload-sarif: 'true'
-          upload-artifact: 'false'
 
   generate-sbom:
     needs: build-and-push-docker
@@ -183,6 +182,7 @@ jobs:
           scan-ref: '${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}'
           format: 'github'
           output: 'docker-dependency-results.sbom.json'
+          github-pat: '${{ secrets.GITHUB_TOKEN }}'
           upload-artifact: 'true'
 
       - name: Generate SBOM for the app code
@@ -192,6 +192,7 @@ jobs:
           scan-ref: 'app'
           format: 'github'
           output: 'app-dependency-results.sbom.json'
+          github-pat: '${{ secrets.GITHUB_TOKEN }}'
           upload-artifact: 'true'
 
   release:
