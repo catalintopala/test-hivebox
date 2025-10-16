@@ -76,9 +76,16 @@ jobs:
           output: 'trivy-app-results.sarif'
           upload-sarif: 'true'
 
+  release:
+    name: release
+    needs: trivy-code-scan
+    uses: ./.github/workflows/release.yml
+    permissions:
+      contents: write
+
   build-and-push-docker:
     name: build-and-push-docker
-    needs: trivy-code-scan
+    needs: release
     runs-on: ubuntu-24.04
     permissions:
       actions: read
@@ -111,9 +118,9 @@ jobs:
           tags: |
             type=raw,value=latest,enable={{is_default_branch}}
             type=ref,event=branch
-            type=semver,pattern={{version}}
-            type=semver,pattern={{major}}.{{minor}}
-            type=semver,pattern={{major}},enable=${{ startsWith(github.ref, 'refs/tags/v0.') == false }}
+            type=semver,pattern={{version}},match=v(\d.\d.\d)
+            type=semver,pattern={{major}}.{{minor}},match=v(\d.\d)
+            type=semver,pattern={{major}},match=v(\d),enable=${{ startsWith(github.ref, 'refs/tags/v0.') == false }}
             type=sha
 
       - name: Display metadata
@@ -204,10 +211,3 @@ jobs:
           output: 'app-dependency-results.sbom.json'
           github-pat: '${{ secrets.GITHUB_TOKEN }}'
           upload-artifact: 'true'
-
-  release:
-    name: release
-    needs: generate-sbom
-    uses: ./.github/workflows/release.yml
-    permissions:
-      contents: write
