@@ -55,6 +55,12 @@ jobs:
           fetch-depth: 0
           persist-credentials: false
 
+      - name: Install Trivy
+        uses: aquasecurity/setup-trivy@e6c2c5e321ed9123bda567646e2f96565e34abe1 # v0.2.4
+        with:
+          version: v0.67.0
+          cache: true
+
       - name: Run Trivy vulnerability scanner in fs mode
         uses: ./.github/actions/trivy
         with:
