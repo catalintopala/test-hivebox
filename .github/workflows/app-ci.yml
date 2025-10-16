@@ -117,6 +117,8 @@ jobs:
       actions: read
       packages: write
       security-events: write
+    env:
+      PR_TAG: 'pr'
 
     steps:
       - name: Check out repository
@@ -138,7 +140,7 @@ jobs:
         with:
           images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}
           tags: |
-            type=raw,value=pr
+            type=raw,value=${{ env.PR_TAG }}
 
       - name: Display metadata
         run: |
@@ -180,5 +182,5 @@ jobs:
         uses: ./.github/actions/trivy
         with:
           scan-type: 'image'
-          scan-ref: '${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:pr'
+          scan-ref: '${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ env.PR_TAG }}'
           format: 'table'
