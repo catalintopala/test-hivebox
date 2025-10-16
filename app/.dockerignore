@@ -1,0 +1,16 @@
+# Docker
+Dockerfile
+.dockerignore
+
+# Virtual environment
+.env
+.venv/
+venv/
+
+# Byte-compiled files
+__pycache__
+.pytest_cache
+
+# Code
+tests
+.cz.toml
