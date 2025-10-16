@@ -16,10 +16,10 @@ inputs:
     description: 'Relative path and name for the output file'
     required: false
     default: ''
-  github-token:
-    description: 'Whether the action needs a GitHub token to upload to GitHub Dependency Graph'
+  github-pat:
+    description: 'GitHub token used to upload to GitHub Dependency Graph'
     required: false
-    default: 'false'
+    default: ''
   upload-sarif:
     description: 'Whether the action should upload a SARIF file to GitHub Advanced Security Dashboard'
     required: false
@@ -39,7 +39,7 @@ runs:
         scan-ref: ${{ inputs.scan-ref }}
         format: ${{ inputs.format }}
         ${{ inputs.output != '' && 'output' }}: ${{ inputs.output }}
-        ${{ inputs.github-token == 'true' && 'github-token' }}: ${{ secrets.GITHUB_TOKEN }}
+        ${{ inputs.github-pat != '' && 'github-pat' }}: ${{ inputs.github-pat }}
         ignore-unfixed: true
         scanners: 'vuln,misconfig'
         severity: 'CRITICAL,HIGH'
