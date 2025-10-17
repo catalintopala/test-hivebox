@@ -1,11 +1,9 @@
-name: App CD
+name: app on release
 
 on:
   push:
-    branches:
-      - main
-    paths:
-      - "app/**"
+    tags:
+      - 'v[0-9]+.[0-9]+.[0-9]+-app'
 
 permissions:
   contents: read
@@ -15,77 +13,8 @@ env:
   IMAGE_NAME: ${{ github.repository }}
 
 jobs:
-  semgrep:
-    name: semgrep
-    runs-on: ubuntu-24.04
-    permissions:
-      actions: read
-      security-events: write
-    container:
-      image: semgrep/semgrep@sha256:46c44b623972875ebc6273adb3d725f0411f81b52f8e077aabf21629a6190c39 # v1.135.0
-      options: --user root
-
-    steps:
-      - name: Harden the runner (Audit all outbound calls)
-        uses: step-security/harden-runner@ec9f2d5744a09debf3a187a3f4f675c53b671911 # v2.13.0
-        with:
-          egress-policy: audit
-
-      - name: Check out repository
-        uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # v5.0.0
-        with:
-          persist-credentials: false
-
-      - name: Run semgrep
-        uses: ./.github/actions/semgrep
-        with:
-          upload-sarif: 'true'
-          dir: 'app'
-
-  trivy-code-scan:
-    name: trivy-code-scan
-    needs: semgrep
-    runs-on: ubuntu-24.04
-    permissions:
-      actions: read
-      security-events: write
-
-    steps:
-      - name: Harden the runner (Audit all outbound calls)
-        uses: step-security/harden-runner@ec9f2d5744a09debf3a187a3f4f675c53b671911 # v2.13.0
-        with:
-          egress-policy: audit
-
-      - name: Check out repository
-        uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # v5.0.0
-        with:
-          persist-credentials: false
-
-      - name: Install Trivy
-        uses: aquasecurity/setup-trivy@e6c2c5e321ed9123bda567646e2f96565e34abe1 # v0.2.4
-        with:
-          version: v0.67.0
-          cache: true
-
-      - name: Run Trivy vulnerability scanner in fs mode
-        uses: ./.github/actions/trivy
-        with:
-          scan-type: 'fs'
-          scan-ref: 'app'
-          format: 'sarif'
-          output: 'trivy-app-results.sarif'
-          upload-sarif: 'true'
-
-  release:
-    name: release
-    needs: trivy-code-scan
-    uses: ./.github/workflows/release.yml
-    permissions:
-      contents: write
-
   build-and-push-docker:
     name: build-and-push-docker
-    needs: release
     runs-on: ubuntu-24.04
     permissions:
       actions: read

@@ -160,7 +160,7 @@ jobs:
     if:
       needs.get-changed-dir.outputs.dir-count == '1' &&
       needs.get-changed-dir.outputs.changed-dir == 'app'
-    uses: ./.github/workflows/app-ci.yml
+    uses: ./.github/workflows/app-on-pr.yml
     permissions:
       contents: read
       actions: read
