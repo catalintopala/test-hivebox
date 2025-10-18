@@ -76,5 +76,7 @@ jobs:
     name: release
     needs: trivy-code-scan
     uses: ./.github/workflows/release.yml
+    secrets:
+      PAT: ${{ secrets.TEST_HIVEBOX_PAT }}
     permissions:
       contents: write
