@@ -2,6 +2,9 @@ name: Release
 
 on:
   workflow_call:
+    secrets:
+      PAT:
+        required: true
 
 permissions:
   contents: read
@@ -25,7 +28,7 @@ jobs:
         with:
           fetch-depth: 0
           persist-credentials: false
-          token: ${{ secrets.GITHUB_TOKEN }}
+          token: ${{ secrets.PAT }}
 
       - name: Get changed directory
         id: get-changed-dir
@@ -39,7 +42,7 @@ jobs:
         uses: commitizen-tools/commitizen-action@5b0848cd060263e24602d1eba03710e056ef7711 # v0.24.0
         with:
           working_directory: ${{ env.CHANGED_DIR }}
-          github_token: ${{ secrets.GITHUB_TOKEN }}
+          github_token: ${{ secrets.PAT }}
           changelog_increment_filename: body.md
           check_consistency: true
 
@@ -48,4 +51,4 @@ jobs:
         with:
           body_path: "${{ env.CHANGED_DIR }}/body.md"
           tag_name: "v${{ steps.cz.outputs.version }}-${{ env.CHANGED_DIR }}"
-          token: ${{ secrets.GITHUB_TOKEN }}
+          token: ${{ secrets.PAT }}
