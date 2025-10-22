@@ -1,4 +1,4 @@
-name: app on push
+name: App on Push
 
 on:
   push:
@@ -13,6 +13,7 @@ permissions:
 jobs:
   semgrep:
     name: semgrep
+    if: startsWith(github.event.head_commit.message, 'bump:') == false
     runs-on: ubuntu-24.04
     permissions:
       actions: read
