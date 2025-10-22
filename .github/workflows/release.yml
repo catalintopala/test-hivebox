@@ -50,5 +50,5 @@ jobs:
         uses: softprops/action-gh-release@6cbd405e2c4e67a21c47fa9e383d020e4e28b836 # v2.3.3
         with:
           body_path: "${{ env.CHANGED_DIR }}/body.md"
-          tag_name: "v${{ steps.cz.outputs.version }}-${{ env.CHANGED_DIR }}"
+          tag_name: "${{ env.CHANGED_DIR}}-v${{ steps.cz.outputs.version }}"
           token: ${{ secrets.PAT }}
