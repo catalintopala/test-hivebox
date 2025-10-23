@@ -112,7 +112,9 @@ jobs:
   docker:
     name: docker
     needs: pytest
-    uses: ./.github/workflows/docker.yml
+    uses: ./.github/workflows/app-docker.yml
+    with:
+      dir: 'app'
     permissions:
       actions: read
       packages: write
