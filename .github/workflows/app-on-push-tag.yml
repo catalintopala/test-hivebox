@@ -19,6 +19,7 @@ jobs:
     with:
       dir: 'app'
     permissions:
+      contents: read
       actions: read
       packages: write
       security-events: write
