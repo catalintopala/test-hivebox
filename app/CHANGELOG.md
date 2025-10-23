@@ -1,3 +1,9 @@
+## app-v0.2.0 (2025-10-23)
+
+### Features
+
+- **(app)**: add /temperature endpoint (#118)
+
 ## app-v0.1.0 (2025-10-23)
 
 ### Features

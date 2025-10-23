@@ -3,7 +3,7 @@ name = "cz_customize"
 tag_format = "app-v${version}"
 ignored_tag_formats = ["*-v${version}"]
 version_scheme = "semver2"
-version = "0.1.0"
+version = "0.2.0"
 version_provider = "uv"
 version_files = [
     "pyproject.toml:version",
