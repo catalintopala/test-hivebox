@@ -38,7 +38,6 @@ jobs:
           persist-credentials: false
 
       - name: Log in to GHCR
-        if: env.IS_PR == 'false'
         uses: docker/login-action@184bdaa0721073962dff0199f1fb9940f07167d1 # v3.5.0
         with:
           registry: ${{ env.REGISTRY }}
