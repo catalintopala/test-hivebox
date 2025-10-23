@@ -44,6 +44,7 @@ jobs:
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
 
+        # "latest" tag is added automatically because "type=match" is used, as per docker/metadata-action docs
       - name: Extract metadata from Docker
         id: meta
         uses: docker/metadata-action@c1e51972afc2121e065aed6d45c65596fe445f3f # v5.8.0
@@ -53,8 +54,7 @@ jobs:
             type=match,pattern=v(\d.\d.\d),group=1
             type=match,pattern=v(\d.\d),group=1
             type=match,pattern=v(\d),group=1,enable=${{ contains(github.ref, inputs.dir == 'app' && 'app') == 'false' }}
-            type=raw,value=latest,enable={{is_default_branch}}
-            type=raw,value=pr,enable={{is_not_default_branch}}
+            type=raw,value=pr,enable=${{ env.IS_PR == true }}
 
       - name: Display metadata
         run: |
