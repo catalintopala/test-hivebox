@@ -15,8 +15,11 @@ env:
 jobs:
   build-and-push-docker:
     name: build-and-push-docker
-    uses: ./.github/workflows/docker.yml
+    uses: ./.github/workflows/app-docker.yml
+    with:
+      dir: 'app'
     permissions:
+      contents: read
       actions: read
       packages: write
       security-events: write
