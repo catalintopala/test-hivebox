@@ -116,11 +116,9 @@ jobs:
       - name: Cache pre-commit dependencies
         id: cache_pre_commit
         uses: actions/cache@2f8e54208210a422b2efd51efaa6bd6d7ca8920f # v3.4.3
-        env:
-          CACHE-NAME: cache-pre-commit
         with:
           path: ~/.cache/pre-commit
-          key: ${{ env.CACHE-NAME }}-${{ hashFiles('.pre-commit-config.yaml', '~/.cache/pre-commit/*') }}
+          key: cache-pre-commit-${{ hashFiles('.pre-commit-config.yaml', '~/.cache/pre-commit/*') }}
 
       - name: Install pre-commit hooks
         if: steps.cache_pre_commit.outputs.cache-hit != 'true'
